@@ -48,6 +48,7 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
+    implementation(libs.gms.location)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
