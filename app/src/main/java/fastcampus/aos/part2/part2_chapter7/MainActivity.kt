@@ -18,6 +18,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,61 +49,6 @@ class MainActivity : AppCompatActivity() {
 
         locationPermissionRequest.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
 
-
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl("http://apis.data.go.kr/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(WeatherService::class.java)
-        val baseDateTime = BaseDateTime.getBaseDateTime()
-        val converter = GeoPointConverter()
-        val point = converter.convert(37.579876, 126.9769982)
-        service.getVillageForecast(
-            serviceKey = DEC_KEY,
-            baseDate = baseDateTime.baseDate,
-            baseTime = baseDateTime.baseTime,
-            nx = point.nx,
-            ny = point.ny
-        ).enqueue(object : Callback<WeatherEntity> {
-            override fun onResponse(
-                call: Call<WeatherEntity?>,
-                response: Response<WeatherEntity?>
-            ) {
-
-                val forecastDateTimeMap = mutableMapOf<String, Forecast>()
-                val forecastList =
-                    response.body()?.response?.body?.items?.forecastEntities.orEmpty()
-                forecastList.forEach { forecast ->
-
-                    if (forecastDateTimeMap["${forecast.forecastDate}/${forecast.forecastTime}"] == null) {
-                        forecastDateTimeMap["${forecast.forecastDate}/${forecast.forecastTime}"] =
-                            Forecast(
-                                forecastDate = forecast.forecastDate,
-                                forecastTime = forecast.forecastTime
-                            )
-                    }
-
-                    forecastDateTimeMap["${forecast.forecastDate}/${forecast.forecastTime}"]?.apply {
-                        when (Category.from(forecast.category)) {
-                            Category.POP -> precipitation = forecast.forecastValue.toInt()
-                            Category.PTY -> precipitationType = transformRainType(forecast)
-                            Category.SKY -> sky = transformSky(forecast)
-                            Category.TMP -> temperature = forecast.forecastValue.toDouble()
-                            else -> {}
-                        }
-                    }
-                }
-
-                Log.e("MainActivity", "forecastDateTimeMap: $forecastDateTimeMap")
-            }
-
-            override fun onFailure(call: Call<WeatherEntity?>, t: Throwable) {
-                TODO("Not yet implemented")
-            }
-
-        })
     }
 
     private fun transformRainType(forecast: ForecastEntity): String {
@@ -158,10 +104,8 @@ class MainActivity : AppCompatActivity() {
                 ) {
 
                     val forecastDateTimeMap = mutableMapOf<String, Forecast>()
-                    val forecastList =
-                        response.body()?.response?.body?.items?.forecastEntities.orEmpty()
+                    val forecastList = response.body()?.response?.body?.items?.forecastEntities.orEmpty()
                     forecastList.forEach { forecast ->
-
                         if (forecastDateTimeMap["${forecast.forecastDate}/${forecast.forecastTime}"] == null) {
                             forecastDateTimeMap["${forecast.forecastDate}/${forecast.forecastTime}"] =
                                 Forecast(
@@ -181,21 +125,28 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    Log.e("MainActivity", "forecastDateTimeMap: $forecastDateTimeMap")
+                    val list = forecastDateTimeMap.values.toMutableList()
+                    list.sortWith { f1, f2 ->
+                        val f1DataTime = "${f1.forecastDate}${f1.forecastTime}"
+                        val f2DateTime = "${f2.forecastDate}${f2.forecastTime}"
+
+                        return@sortWith f1DataTime.compareTo(f2DateTime)
+                    }
+
+                    val currentForecast = list.first()
+
+                    binding.temperatureTextView.text = getString(R.string.temperature_text, currentForecast.temperature)
+                    binding.skyTextView.text = currentForecast.weather
+                    binding.precipitationTextView.text = getString(R.string.precipitation_text, currentForecast.precipitation)
                 }
 
-                override fun onFailure(call: Call<WeatherEntity?>, t: Throwable) {
-                    TODO("Not yet implemented")
-                }
-
+                override fun onFailure(call: Call<WeatherEntity?>, t: Throwable) {}
             })
-
-            Log.e("MainActivity", "hyunsu $it")
         }
     }
 
     companion object {
         const val DEC_KEY =
-            "dNMWWuDj2dDf+aUjZqDW6CDkSuj9eHpUek9kD7QFQXw9VQdmfBH2+pLpv4d4xQaRl/rRH7hI8hAVZXWvTrmZkg=="
+            "dNMWWuDj2dDf%2BaUjZqDW6CDkSuj9eHpUek9kD7QFQXw9VQdmfBH2%2BpLpv4d4xQaRl%2FrRH7hI8hAVZXWvTrmZkg%3D%3D"
     }
 }

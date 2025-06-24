@@ -31,7 +31,7 @@ class GeoPointConverter {
 
     data class Point(val nx: Int, val ny: Int)
 
-    fun convert(lon: Double, lat: Double): Point {
+    fun convert(lat: Double, lon: Double): Point {
         var sn = tan(PI * 0.25 + slat2 * 0.5) / tan(PI * 0.25 + slat1 * 0.5)
         sn = log2(cos(slat1) / cos(slat2)) / log2(sn)
 
@@ -52,8 +52,6 @@ class GeoPointConverter {
 
         val nx = ra * sin(theta) + XO + 1.5
         val ny = ro - ra * cos(theta) + YO + 1.5
-
         return Point(nx.toInt(), ny.toInt())
     }
-
 }

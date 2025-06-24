@@ -24,7 +24,7 @@ data class BaseDateTime(
                 in LocalTime.of(11, 30) .. LocalTime.of(14, 30) -> "1100"
                 in LocalTime.of(14, 30) .. LocalTime.of(17, 30) -> "1400"
                 in LocalTime.of(17, 30) .. LocalTime.of(20, 30) -> "1700"
-                in LocalTime.of(20, 30) .. LocalTime.of(23, 30) -> "2000"
+                in LocalTime.of(20, 30)..LocalTime.MAX -> "2000"
                 else -> "2300"
             }
 
