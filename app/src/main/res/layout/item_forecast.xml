@@ -6,7 +6,8 @@
     android:padding="20dp"
     android:background="@color/transparent"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:background="@color/black">
 
     <TextView
         android:id="@+id/timeTextView"
