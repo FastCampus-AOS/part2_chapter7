@@ -71,7 +71,6 @@
             android:id="@+id/childForecastLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/white"
             android:orientation="horizontal" />
     </HorizontalScrollView>
 
