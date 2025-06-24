@@ -25,7 +25,7 @@ class WeatherAppWidgetProvider: AppWidgetProvider() {
                 context.packageName,
                 R.layout.widget_weather
             ).apply {
-                setOnClickPendingIntent(R.id.testTextView, pendingIntent)
+                setOnClickPendingIntent(R.id.temperatureTextView, pendingIntent)
             }
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
