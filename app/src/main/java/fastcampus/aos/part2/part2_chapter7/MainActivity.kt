@@ -3,6 +3,7 @@ package fastcampus.aos.part2.part2_chapter7
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -13,12 +14,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import fastcampus.aos.part2.part2_chapter7.databinding.ActivityMainBinding
+import fastcampus.aos.part2.part2_chapter7.databinding.ItemForecastBinding
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URLEncoder
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -82,6 +85,21 @@ class MainActivity : AppCompatActivity() {
             return
         }
         fusedLocationProviderClient.lastLocation.addOnSuccessListener {
+
+            Thread {
+                try {
+                    val addressList = Geocoder(this, Locale.KOREA).getFromLocation(it.latitude, it.longitude, 1)
+                    Log.e("hyunsu addressList", addressList.toString())
+
+                    runOnUiThread {
+                        binding.locationTextView.text = addressList?.get(0)?.locality.orEmpty()
+                        Log.e("hyunsu addressList?.get(0)?.thoroughfare", addressList?.get(0)?.locality.orEmpty().toString())
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }.start()
+
             val retrofit = Retrofit.Builder()
                 .baseUrl("http://apis.data.go.kr/")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -91,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             val baseDateTime = BaseDateTime.getBaseDateTime()
             val converter = GeoPointConverter()
             val point = converter.convert(it.latitude, it.longitude)
+            Log.e("hyunsu point", point.toString())
             service.getVillageForecast(
                 serviceKey = DEC_KEY,
                 baseDate = baseDateTime.baseDate,
@@ -135,9 +154,28 @@ class MainActivity : AppCompatActivity() {
 
                     val currentForecast = list.first()
 
+                    Log.e("hyunsu raw response", response.body().toString())
+                    Log.e("hyunsu forecast list size", list.size.toString())
+
                     binding.temperatureTextView.text = getString(R.string.temperature_text, currentForecast.temperature)
                     binding.skyTextView.text = currentForecast.weather
                     binding.precipitationTextView.text = getString(R.string.precipitation_text, currentForecast.precipitation)
+
+                    binding.childForecastLayout.apply {
+                        list.forEachIndexed { index, forecast ->
+                            if (index == 0) { return@forEachIndexed }
+
+                            val itemView = ItemForecastBinding.inflate(layoutInflater, this, false)
+                            Log.e("hyunsu itemView test", itemView.toString())
+
+                            itemView.timeTextView.text = forecast.forecastTime
+                            itemView.weatherTextView.text = forecast.weather
+                            itemView.temperatureTextView.text = getString(R.string.temperature_text, forecast.temperature)
+
+                            addView(itemView.root)
+                            Log.e("hyunsu addView", "아이템 추가")
+                        }
+                    }
                 }
 
                 override fun onFailure(call: Call<WeatherEntity?>, t: Throwable) {}
